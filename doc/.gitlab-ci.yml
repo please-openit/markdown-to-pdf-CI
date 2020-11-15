@@ -1,0 +1,17 @@
+image: mdpdf:master
+
+cache:
+    paths:
+        - build
+
+deploy:docker:production:
+    stage: deploy
+    script:
+        - git log --date=short --pretty=format:' | %ad | %ae | %s | '  HEAD >> HOMEPAGE.md
+        - echo $'\n\n' >> HOMEPAGE.md
+        - "echo '<p style=\"page-break-before: always\">' >> HOMEPAGE.md"
+        - "cat *-*.md >> HOMEPAGE.md"
+        - mv HOMEPAGE.md DOCUMENT.md
+        - markdown-toc -i DOCUMENT.md
+        - mdpdf ${CI_PROJECT_DIR}/DOCUMENT.md --header ${CI_PROJECT_DIR}/header.html --footer ${CI_PROJECT_DIR}/footer.html --style=style.css --gh-style --format=A4 --orientation=portrait
+        - mailsend-go -sub "${CI_PROJECT_NAME} pdf export" -smtp ssl0.ovh.net -port 465 -ssl auth -user noreply -pass ${MAIL_PASSWORD} -from noreply -to ${GITLAB_USER_EMAIL} body -msg "This is your export of your document" attach -file DOCUMENT.pdf

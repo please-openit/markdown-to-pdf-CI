@@ -1,0 +1,12 @@
+image: gradle:alpine
+
+cache:
+    paths:
+        - build
+
+deploy:docker:production:
+    stage: deploy
+    image: docker:18.09
+    script:
+        - docker build -t mdpdf:${CI_COMMIT_REF_SLUG} .
+        - docker push mdpdf:${CI_COMMIT_REF_SLUG}
